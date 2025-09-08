@@ -1,20 +1,7 @@
 'use client';
 
 import { memo, useCallback, useMemo } from 'react';
-import {
-    Bar,
-    BarChart,
-    Cell,
-    Legend,
-    Line,
-    LineChart,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
+import { Bar, BarChart, Cell, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Row } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
@@ -30,8 +17,6 @@ type Props = {
 };
 
 function ChartsInner({ type, rows, xKey, yKey, categoryKey, valueKey }: Props) {
-    if (!rows.length) return <div className="text-gray-500 text-sm">No data after filters.</div>;
-
     // Compute only what each chart needs (no cloning of entire rows)
     const chartData = useMemo(() => {
         if (type === 'pie' && categoryKey && valueKey) {
@@ -95,30 +80,6 @@ function ChartsInner({ type, rows, xKey, yKey, categoryKey, valueKey }: Props) {
                             isAnimationActive={false}
                         />
                     </LineChart>
-                </ResponsiveContainer>
-            </div>
-        );
-    }
-
-    if (type === 'pie' && categoryKey && valueKey) {
-        return (
-            <div key={chartKey} className="h-96 w-full">
-                <ResponsiveContainer>
-                    <PieChart>
-                        <Tooltip />
-                        <Legend />
-                        <Pie
-                            data={chartData as Array<{ name: string; value: number }>}
-                            dataKey="value"
-                            nameKey="name"
-                            outerRadius={120}
-                            innerRadius={60}
-                        >
-                            {(chartData as Array<{ name: string; value: number }>).map((_, i) => (
-                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                            ))}
-                        </Pie>
-                    </PieChart>
                 </ResponsiveContainer>
             </div>
         );
