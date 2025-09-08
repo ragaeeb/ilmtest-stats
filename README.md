@@ -1,3 +1,10 @@
+[![wakatime](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/1fef3599-9317-4cbf-9885-96470bf9239f.svg)](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/1fef3599-9317-4cbf-9885-96470bf9239f)
+[![codecov](https://codecov.io/gh/ragaeeb/ilmtest-stats/graph/badge.svg?token=ZD0WHFWUF5)](https://codecov.io/gh/ragaeeb/ilmtest-stats)
+[![typescript](https://badgen.net/badge/icon/typescript?icon=typescript&label&color=blue)](https://www.typescriptlang.org)
+[![Node.js CI](https://github.com/ragaeeb/ilmtest-stats/actions/workflows/build.yml/badge.svg)](https://github.com/ragaeeb/ilmtest-stats/actions/workflows/build.yml)
+![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
+![GitHub License](https://img.shields.io/github/license/ragaeeb/ilmtest-stats)
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

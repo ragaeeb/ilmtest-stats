@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer theme, base, utilities;
+
+@layer theme {
+  :root {
+    --background: 255 255 255;
+    --foreground: 2 6 23;
+    --muted: 241 245 249;
+    --primary: 32 169 227;
+    --primary-foreground: 255 255 255;
+    --card: 255 255 255;
+    --card-foreground: 2 6 23;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 32 169 227;
+  }
+  .dark {
+    --background: 2 6 23;
+    --foreground: 226 232 240;
+    --muted: 15 23 42;
+    --primary: 32 169 227;
+    --primary-foreground: 255 255 255;
+    --card: 15 23 42;
+    --card-foreground: 226 232 240;
+    --border: 30 41 59;
+    --input: 30 41 59;
+    --ring: 32 169 227;
+  }
+}
+
+@layer base {
+  html, body, :root { height: 100%; }
+  body {
+    @apply bg-[rgb(var(--background))] text-[rgb(var(--foreground))] antialiased;
+  }
+}
+
+@layer utilities {
+  .container-app { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+}
