@@ -23,6 +23,9 @@
                 "noUnknownAtRules": "off",
                 "noExplicitAny": "off"
             },
+            "style": {
+                "noNonNullAssertion": "off"
+            },
             "nursery": {
                 "useSortedClasses": {
                     "level": "error",

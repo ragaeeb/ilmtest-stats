@@ -1,0 +1,106 @@
+import { promises as fs } from 'node:fs';
+import { parse } from 'csv-parse/sync';
+
+type Stats = {
+    id: number;
+    timestamp: Date;
+    collection: number;
+    covered: number;
+    reviews: number;
+    drafts: number;
+    explained: number;
+    total_entries: number;
+    unlinked: number;
+    verify: number;
+};
+
+const COMPARISON_KEYS: (keyof Stats)[] = [
+    'collection',
+    'covered',
+    'reviews',
+    'drafts',
+    'explained',
+    'total_entries',
+    'unlinked',
+    'verify',
+] as const;
+
+type CompactStats = Partial<Pick<Stats, 'covered' | 'reviews' | 'drafts' | 'explained' | 'unlinked' | 'verify'>> & {
+    t: number;
+    entries?: number;
+};
+
+type OptimizedStats = {
+    stats: Record<string, CompactStats[]>;
+};
+
+const loadStatsFromRecords = async (filePath: string) => {
+    const buf = await fs.readFile(filePath);
+
+    const records = parse<Stats>(buf.toString('utf-8'), {
+        columns: true,
+        cast: true,
+        castDate: true,
+        skip_empty_lines: true,
+        trim: true,
+    });
+
+    const collectionToStats: Map<number, Partial<Stats>[]> = new Map();
+    const collectionCurrentState: Map<number, Stats> = new Map();
+
+    for (const record of records) {
+        let stats = collectionToStats.get(record.collection);
+        const currentState = collectionCurrentState.get(record.collection);
+
+        if (!stats || !currentState) {
+            // First record for this collection
+            stats = [record];
+            collectionToStats.set(record.collection, stats);
+            collectionCurrentState.set(record.collection, { ...record });
+            continue;
+        }
+
+        // Compare against the current state
+        const diff: Partial<Stats> = { timestamp: record.timestamp };
+        let isChanged = false;
+
+        for (const key of COMPARISON_KEYS) {
+            if (currentState[key] !== record[key]) {
+                (diff as any)[key] = record[key];
+                // Update current state
+                (currentState as any)[key] = record[key];
+                isChanged = true;
+            }
+        }
+
+        // Update timestamp in current state regardless
+        currentState.timestamp = record.timestamp;
+
+        if (isChanged) {
+            stats.push(diff);
+        }
+    }
+
+    return collectionToStats;
+};
+
+export const condenseCollectionStats = async (filePath: string) => {
+    const collectionToStats = await loadStatsFromRecords(filePath);
+    const optimizedStats: Record<string, CompactStats[]> = {};
+
+    for (const key of [...collectionToStats.keys()].sort()) {
+        optimizedStats[key] = collectionToStats
+            .get(key)!
+            .map(({ timestamp, total_entries, collection, id, ...stat }) => {
+                return {
+                    ...stat,
+                    ...(total_entries && { entries: total_entries }),
+                    t: Math.floor(timestamp!.getTime() / 1000),
+                };
+            });
+    }
+
+    const result = { stats: optimizedStats } satisfies OptimizedStats;
+
+    await fs.writeFile('collection_stats.json', JSON.stringify(result));
+};
