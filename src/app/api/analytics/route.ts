@@ -3,8 +3,6 @@ import { NextResponse } from 'next/server';
 import { loadAnalytics } from '@/lib/analytics';
 import type { Analytics, ProcessedAnalytics, ProcessedSession, SessionStats } from '@/lib/types';
 
-export const dynamic = 'force-static';
-
 function extractBrowser(userAgent: string): string {
     if (userAgent.includes('Chrome')) return 'Chrome';
     if (userAgent.includes('Firefox')) return 'Firefox';
@@ -31,7 +29,11 @@ function processSessionEvents(events: any[]): { startTime: number; endTime: numb
     return { startTime, endTime, visibilityChanges };
 }
 
-function updateEventCounts(events: any[], eventCounts: Record<string, number>, eventsByDay: Record<string, number>): void {
+function updateEventCounts(
+    events: any[],
+    eventCounts: Record<string, number>,
+    eventsByDay: Record<string, number>,
+): void {
     for (const event of events) {
         eventCounts[event.e] = (eventCounts[event.e] || 0) + 1;
 
@@ -45,7 +47,7 @@ function updateSessionStats(
     userSessions: Record<number, number>,
     appVersions: Record<string, number>,
     platforms: Record<string, number>,
-    browsers: Record<string, number>
+    browsers: Record<string, number>,
 ): void {
     const { state } = sessionData;
 
@@ -74,10 +76,10 @@ function calculateSessionStats(
     userSessions: Record<number, number>,
     appVersions: Record<string, number>,
     platforms: Record<string, number>,
-    browsers: Record<string, number>
+    browsers: Record<string, number>,
 ): SessionStats {
     const durations = allSessions.map((s) => s.duration).filter((d) => d > 0);
-    
+
     return {
         totalSessions: allSessions.length,
         averageSessionDuration: durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0,
@@ -146,7 +148,7 @@ function processAnalyticsData(analytics: Analytics[]): { sessions: ProcessedSess
         userSessions,
         appVersions,
         platforms,
-        browsers
+        browsers,
     );
 
     return { sessions: allSessions, stats };
@@ -156,7 +158,7 @@ function applySessionFilters(
     sessions: ProcessedSession[],
     eventFilter: string | null,
     dateFrom: string | null,
-    dateTo: string | null
+    dateTo: string | null,
 ): ProcessedSession[] {
     let filteredSessions = sessions;
 
@@ -178,7 +180,9 @@ function applySessionFilters(
     return filteredSessions;
 }
 
-function generateEventDetails(sessions: ProcessedSession[]): Record<string, { count: number; contexts: Record<string, number>; metadata: any[] }> {
+function generateEventDetails(
+    sessions: ProcessedSession[],
+): Record<string, { count: number; contexts: Record<string, number>; metadata: any[] }> {
     const eventDetails: Record<string, { count: number; contexts: Record<string, number>; metadata: any[] }> = {};
 
     for (const session of sessions) {
