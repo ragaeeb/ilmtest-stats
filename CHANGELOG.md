@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.1.0...v1.2.0) (2025-09-09)
+
+
+### Features
+
+* **analytics:** Add analytics page ([7e62535](https://github.com/ragaeeb/ilmtest-stats/commit/7e62535085df513dca1f2ad68eac8dde3aac1f63))
+
 # [1.1.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.0.0...v1.1.0) (2025-09-09)
 
 
