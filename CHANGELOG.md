@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/ragaeeb/ilmtest-stats/compare/v1.2.0...v1.2.1) (2025-09-09)
+
+
+### Bug Fixes
+
+* **analytics:** Make analytics route dynamic instead of static ([a3aab01](https://github.com/ragaeeb/ilmtest-stats/commit/a3aab0191d87ffa12831e7f7db77f1ea6fe5f19c))
+
 # [1.2.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.1.0...v1.2.0) (2025-09-09)
 
 
