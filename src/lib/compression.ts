@@ -5,10 +5,8 @@ type CompressOpts = {
     canonical?: boolean;
 };
 
-export const compressJson = (value: unknown, opts: CompressOpts = {}) => {
-    const { canonical = true } = opts;
-    const json = JSON.stringify(canonical ? canonicalize(value) : value);
-    const input = Buffer.from(json, 'utf8');
+export const compressString = (value: string) => {
+    const input = Buffer.from(value, 'utf8');
 
     // Brotli tuned for max compression of text/JSON
     const params: Record<number, number> = {
@@ -21,9 +19,20 @@ export const compressJson = (value: unknown, opts: CompressOpts = {}) => {
     return brotliCompressSync(input, { params });
 };
 
-export const decompressJson = <T = unknown>(buf: Buffer) => {
+export const compressJson = (value: unknown, opts: CompressOpts = {}) => {
+    const { canonical = true } = opts;
+    const json = JSON.stringify(canonical ? canonicalize(value) : value);
+
+    return compressString(json);
+};
+
+export const decompressString = (buf: Buffer) => {
     const out = brotliDecompressSync(buf);
-    return JSON.parse(out.toString('utf8')) as T;
+    return out.toString('utf8');
+};
+
+export const decompressJson = <T = unknown>(buf: Buffer) => {
+    return JSON.parse(decompressString(buf)) as T;
 };
 
 // Base64url convenience helpers if you want a text token (DB/URLs):

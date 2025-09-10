@@ -82,3 +82,86 @@ export type ProcessedAnalytics = {
         dateTo: string | null;
     };
 };
+
+export type NormalizedRecord = {
+    ProductName: string;
+    FileBundleName: string;
+    VersionId: number;
+    DateTime: number; // Unix timestamp in seconds
+    DeviceId: number;
+    OSId: number;
+    CarrierId: number;
+    LocaleId: number;
+    CountryId: number;
+};
+
+export type RawBB10Record = {
+    VersionId: number;
+    DateTime: number;
+    DeviceId: number;
+    OSId: number;
+    CarrierId: number;
+    LocaleId: number;
+    CountryId: number;
+};
+
+export type BB10ReferenceData = {
+    countries: Record<string, string>;
+    devices: Record<string, string>;
+    locales: Record<string, string>;
+    osVersions: Record<string, string>;
+    versions: Record<string, string>;
+    carriers: Record<string, string>;
+};
+
+export type BB10Stats = {
+    totalDownloads: number;
+    uniqueDevices: number;
+    dateRange: {
+        start: Date;
+        end: Date;
+    };
+    downloadsByCountry: Array<{
+        country: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsByVersion: Array<{
+        version: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsByDevice: Array<{
+        device: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsByCarrier: Array<{
+        carrier: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsByOS: Array<{
+        osVersion: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsByLocale: Array<{
+        locale: string;
+        downloads: number;
+        percentage: number;
+    }>;
+    downloadsOverTime: Array<{
+        date: string;
+        downloads: number;
+    }>;
+    topCountries: string[];
+    topDevices: string[];
+    topVersions: string[];
+};
+
+export type BB10Response = {
+    appName: string;
+    stats: BB10Stats;
+    records: NormalizedRecord[];
+};
