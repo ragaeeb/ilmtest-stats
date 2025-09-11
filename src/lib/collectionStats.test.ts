@@ -1,6 +1,6 @@
 import { describe, it } from 'bun:test';
 import path from 'node:path';
-import { condenseCollectionStats } from './collectionStats';
+import { condenseCollectionStats, optimizeQuranProgress } from './collectionStats';
 
 describe('collectionStats', () => {
     describe('condenseCollectionStats', () => {
@@ -12,6 +12,12 @@ describe('collectionStats', () => {
             const collectionsFile = Bun.file(path.join('public', 'data', 'collections.json'));
             const result = await collectionsFile.json();
             await collectionsFile.write(JSON.stringify(result));
+        });
+    });
+
+    describe('optimizeQuranProgress', () => {
+        it.skip('should optimize it', async () => {
+            await optimizeQuranProgress('../quran10_progress.csv');
         });
     });
 });

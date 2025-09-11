@@ -104,3 +104,50 @@ export const condenseCollectionStats = async (filePath: string) => {
 
     await fs.writeFile('collection_stats.json', JSON.stringify(result));
 };
+
+type QuranProgress = {
+    id: number;
+    timestamp: number;
+    user_id: number;
+    surah_id: number;
+    verse_id: number;
+};
+
+export const optimizeQuranProgress = async (filePath: string) => {
+    const buf = await fs.readFile(filePath);
+
+    const records = parse<QuranProgress>(buf.toString('utf-8'), {
+        columns: true,
+        cast: true,
+        skip_empty_lines: true,
+        trim: true,
+    })
+        .map((r) => {
+            return { timestamp: Math.floor(r.timestamp / 1000), user: r.user_id, surah: r.surah_id, verse: r.verse_id };
+        })
+        .sort((a, b) => {
+            if (a.user !== b.user) {
+                return a.user - b.user;
+            }
+
+            if (a.timestamp !== b.timestamp) {
+                return a.timestamp - b.timestamp;
+            }
+
+            // If user_id is the same, sort by surah_id
+            if (a.surah !== b.surah) {
+                return a.surah - b.surah;
+            }
+
+            // If both user_id and surah_id are the same, sort by verse_id
+            return a.verse - b.verse;
+        });
+
+    const csvRows = ['user,timestamp,surah,verse'];
+
+    for (const record of records) {
+        csvRows.push([record.user, record.timestamp, record.surah, record.verse].join(','));
+    }
+
+    await Bun.write(`quran_progress.csv`, csvRows.join('\n'));
+};
