@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/ragaeeb/ilmtest-stats/compare/v1.4.0...v1.4.1) (2025-09-11)
+
+
+### Bug Fixes
+
+* **stats:** Update collection stats to backfill old ones ([453a3df](https://github.com/ragaeeb/ilmtest-stats/commit/453a3df276b264b3ab273d39e5885a8c88fdbcb3))
+
 # [1.4.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.3.0...v1.4.0) (2025-09-11)
 
 
