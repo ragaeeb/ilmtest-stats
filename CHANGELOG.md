@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.3.0...v1.4.0) (2025-09-11)
+
+
+### Features
+
+* **progress:** Add quran progress page ([323644b](https://github.com/ragaeeb/ilmtest-stats/commit/323644bc125ef76885d84c5f447f7a172cc46248))
+
 # [1.3.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.2.1...v1.3.0) (2025-09-11)
 
 
