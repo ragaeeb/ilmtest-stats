@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.2.1...v1.3.0) (2025-09-11)
+
+
+### Features
+
+* **bb10:** Add bb10 in-app analytics ([1c5427e](https://github.com/ragaeeb/ilmtest-stats/commit/1c5427ecd9c854929c9da845ca222089efde058a))
+
 ## [1.2.1](https://github.com/ragaeeb/ilmtest-stats/compare/v1.2.0...v1.2.1) (2025-09-09)
 
 
