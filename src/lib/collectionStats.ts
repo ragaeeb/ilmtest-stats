@@ -1,5 +1,7 @@
 import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { parse } from 'csv-parse/sync';
+import { compressJson } from './compression';
 
 type Stats = {
     id: number;
@@ -30,7 +32,7 @@ type CompactStats = Partial<Pick<Stats, 'covered' | 'reviews' | 'drafts' | 'expl
     entries?: number;
 };
 
-type OptimizedStats = {
+export type OptimizedStats = {
     stats: Record<string, CompactStats[]>;
 };
 
@@ -84,7 +86,7 @@ const loadStatsFromRecords = async (filePath: string) => {
     return collectionToStats;
 };
 
-export const condenseCollectionStats = async (filePath: string) => {
+export const condenseCollectionStats = async (filePath: string, outputPath = 'collection_stats.json') => {
     const collectionToStats = await loadStatsFromRecords(filePath);
     const optimizedStats: Record<string, CompactStats[]> = {};
 
@@ -102,7 +104,26 @@ export const condenseCollectionStats = async (filePath: string) => {
 
     const result = { stats: optimizedStats } satisfies OptimizedStats;
 
-    await fs.writeFile('collection_stats.json', JSON.stringify(result));
+    if (outputPath) {
+        await fs.writeFile('collection_stats.json', JSON.stringify(result));
+    }
+
+    return result;
+};
+
+export const updateCollectionStats = async (filePath: string) => {
+    const newStats: OptimizedStats = await condenseCollectionStats(filePath, '');
+    const prevStats: OptimizedStats = await Bun.file(path.join('public', 'data', 'collection_stats.json')).json();
+
+    Object.entries(newStats.stats).forEach(([collectionId, stats]) => {
+        if (prevStats.stats[collectionId]) {
+            prevStats.stats[collectionId] = prevStats.stats[collectionId].concat(stats).sort((a, b) => a.t - b.t);
+        } else {
+            console.warn(`${collectionId} not found...`);
+        }
+    });
+
+    await Bun.file('collection_stats.json.br').write(compressJson(prevStats));
 };
 
 type QuranProgress = {

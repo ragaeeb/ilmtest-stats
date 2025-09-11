@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type NextRequest, NextResponse } from 'next/server';
+import type { OptimizedStats } from '@/lib/collectionStats';
+import { decompressJson } from '@/lib/compression';
 
 export const dynamic = 'force-static';
 
@@ -20,9 +22,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         const { collectionId } = await params;
 
         // Read the stats file
-        const statsFilePath = join(process.cwd(), 'public', 'data', 'collection_stats.json');
-        const statsFileContents = await readFile(statsFilePath, 'utf8');
-        const allStats = JSON.parse(statsFileContents);
+        const allStats: OptimizedStats = decompressJson(
+            await readFile(join(process.cwd(), 'public', 'data', 'collection_stats.json.br')),
+        );
 
         // Get stats for this specific collection
         const rawStats = allStats.stats[collectionId];
