@@ -165,3 +165,10 @@ export type BB10Response = {
     stats: BB10Stats;
     records: NormalizedRecord[];
 };
+
+export type AppAnalyticsEvent = {
+    id: string;
+    context?: number | string;
+    count: number;
+    user: number;
+};

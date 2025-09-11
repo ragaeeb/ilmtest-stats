@@ -1,3 +1,5 @@
+# IlmTest Stats
+
 [![wakatime](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/1fef3599-9317-4cbf-9885-96470bf9239f.svg)](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/1fef3599-9317-4cbf-9885-96470bf9239f)
 [![codecov](https://codecov.io/gh/ragaeeb/ilmtest-stats/graph/badge.svg?token=NEUJ7VJ1UR)](https://codecov.io/gh/ragaeeb/ilmtest-stats)
 [![Vercel Deploy](https://deploy-badge.vercel.app/vercel/ilmtest-stats)](https://ilmtest-stats.vercel.app)
@@ -6,39 +8,141 @@
 ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
 ![GitHub License](https://img.shields.io/github/license/ragaeeb/ilmtest-stats)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+A Next.js analytics dashboard for processing and visualizing CSV data, BlackBerry 10 app statistics, and collection metrics.
 
-## Getting Started
+## Features
 
-First, run the development server:
+- **CSV Analytics**: Upload and analyze CSV files with automatic statistics computation
+- **Data Visualization**: Interactive charts with bar and line chart support
+- **BlackBerry 10 Analytics**: Specialized dashboard for BB10 app metrics (quran10, sunnah10, salat10)
+- **Collection Stats**: Track progress metrics for content collections
+- **Performance Optimized**: Virtualized tables, deferred values, and cached computations
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tech Stack
+
+- **Framework**: Next.js 15 with React 19
+- **Styling**: Tailwind CSS 4.x with shadcn/ui
+- **Charts**: Recharts
+- **Data Processing**: CSV parsing with Papa Parse
+- **TypeScript**: Full type safety
+- **Build Tool**: Turbopack
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── analytics/route.ts      # Session analytics API
+│   │   ├── bb10/[appName]/route.ts # BB10 app statistics
+│   │   ├── collections/            # Collection metrics
+│   │   └── stats/route.ts          # CSV statistics API
+│   ├── analytics/page.tsx          # Analytics dashboard
+│   ├── bb10/[appName]/            # BB10 app pages
+│   ├── collections/page.tsx        # Collections overview
+│   └── page.tsx                    # Main CSV analytics page
+├── components/
+│   ├── charts/                     # Chart components
+│   ├── ui/                         # shadcn/ui components
+│   └── virtualized-data-table.tsx  # Performance-optimized table
+└── lib/
+    ├── analytics.ts                # Analytics data processing
+    ├── blackberry.ts               # BB10 data handling
+    ├── csv.ts                      # CSV processing utilities
+    └── types.ts                    # TypeScript definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Routes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### `/api/stats`
+Returns preprocessed CSV data with comprehensive statistics:
+- Numeric statistics (mean, median, std dev, percentiles)
+- String analysis (frequencies, length stats)
+- Date range analysis
+- Chart-optimized data structures
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### `/api/analytics`
+Session analytics with filtering support:
+- Event tracking and aggregation
+- User session analysis
+- Browser/platform statistics
+- Date range filtering
 
-## Learn More
+### `/api/bb10/[appName]`
+BlackBerry 10 app statistics for supported apps:
+- `quran10`, `sunnah10`, `salat10`
+- Compressed CSV processing
+- Reference data denormalization
 
-To learn more about Next.js, take a look at the following resources:
+### `/api/collections`
+Collection management and statistics:
+- Progress tracking metrics
+- Time series data
+- Coverage percentages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data Processing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### CSV Analytics
+- **Automatic Type Detection**: Numbers, dates, strings
+- **Statistical Computing**: Full descriptive statistics
+- **Performance Optimization**: Preprocessing for chart rendering
+- **Virtualization**: Handle large datasets efficiently
 
-## Deploy on Vercel
+### Session Analytics
+- **Event Aggregation**: Real-time event processing
+- **User Tracking**: Session duration and engagement
+- **Browser Detection**: User agent parsing
+- **Filtering**: Date ranges and event types
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Install dependencies
+bun install
+
+# Development server
+bun run dev
+
+# Production build
+bun run build
+
+# Start production server
+bun start
+
+# Linting and formatting
+bun run lint
+bun run format
+```
+
+## Data Files
+
+Place data files in `public/data/`:
+- `analytics.json.br` - Compressed analytics data
+- `collections.json` - Collection definitions
+- `collection_stats.json` - Collection progress data
+- BB10 CSV files for app statistics
+
+## Features
+
+### Performance
+- **Turbopack**: Fast development builds
+- **Virtualized Tables**: Handle 10k+ rows smoothly
+- **Deferred Values**: Keep UI responsive during heavy operations
+- **Chart Caching**: Pre-computed aggregations
+
+### UI/UX
+- **Responsive Design**: Mobile-first approach
+- **Interactive Charts**: Hover effects and tooltips
+- **Real-time Filtering**: Instant data filtering
+- **Loading States**: Smooth loading experiences
+
+### Analytics
+- **Multi-format Support**: CSV, JSON, compressed data
+- **Comprehensive Stats**: Beyond basic aggregations
+- **Time Series**: Date-based trend analysis
+- **Cross-references**: Linked data relationships
+
+## License
+
+MIT License - see [LICENSE.md](LICENSE.md) for details.
