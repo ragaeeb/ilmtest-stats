@@ -88,6 +88,14 @@ const truncateCoordinateString = (coordStr: string) => {
     });
 };
 
+/**
+ * Converts the verbose BlackBerry analytics export into a compressed representation that
+ * deduplicates events, builds mapping tables, and redacts any PII before persisting artifacts.
+ *
+ * @param filePath - Path to the raw analytics CSV export.
+ * @param omitSubsequentRequireds - When true, repeats blank values to shrink the CSV output.
+ * @param shouldCompress - Whether to emit Brotli-compressed files instead of plain text.
+ */
 export const optimizeAnalytics = async (filePath: string, omitSubsequentRequireds = true, shouldCompress = true) => {
     const { idToEvent, idToContext, appToUserEvents, appLaunchId, appCloseId } =
         await mapRecordsToAppUserEvents(filePath);
@@ -216,6 +224,13 @@ export const optimizeAnalytics = async (filePath: string, omitSubsequentRequired
     }
 };
 
+/**
+ * Reads the optimized analytics bundle for the requested BB10 app and reconstructs the
+ * event stream with contextual metadata for dashboard visualizations.
+ *
+ * @param appName - The BB10 application identifier to load.
+ * @returns Denormalized analytics records for the given app.
+ */
 export const loadOptimizedAnalytics = async (appName: string) => {
     const dataPath = path.join(process.cwd(), 'public', 'data', 'bb10', 'analytics');
 
