@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.4.1...v1.5.0) (2025-09-18)
+
+
+### Features
+
+* **autoblock:** Add auto block spam reporting stats dashboard ([#1](https://github.com/ragaeeb/ilmtest-stats/issues/1)) ([9b5acff](https://github.com/ragaeeb/ilmtest-stats/commit/9b5acff51a4510afd6011e5a57afc10220568195))
+
 ## [1.4.1](https://github.com/ragaeeb/ilmtest-stats/compare/v1.4.0...v1.4.1) (2025-09-11)
 
 
