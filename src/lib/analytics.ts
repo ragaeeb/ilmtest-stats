@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { compressJson, decompressJson } from './compression';
+import { compressJson, decompressJson, decompressJsonFile } from './compression';
 import { decrypt, encrypt, initSecrets } from './security';
 import type { Analytics, AnalyticsEvent, SessionData } from './types';
 
@@ -41,8 +41,7 @@ export const optimizeAnalytics = async (filePath: string) => {
 };
 
 export const loadAnalytics = async (filePath: string, decryptionKey = process.env.ENCRYPTION_SECRET) => {
-    const buffer = await readFile(filePath);
-    const analytics: Analytics[] = decompressJson(buffer);
+    const analytics: Analytics[] = await decompressJsonFile(filePath);
 
     if (decryptionKey) {
         initSecrets(decryptionKey);

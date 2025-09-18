@@ -5,6 +5,7 @@ import { compressJson, compressString, decompressJson, decompressString } from '
 import { hasPII } from './pii';
 import { encrypt, initSecrets } from './security';
 import type { AppAnalyticsEvent } from './types';
+import { invertObject } from './utils';
 
 type RawEvent = {
     id: number;
@@ -20,8 +21,6 @@ type ProcessedEvent = Pick<RawEvent, 'count'> & {
     context?: number;
     contextId?: number;
 };
-
-const invertObject = (obj: Record<string, number>) => Object.fromEntries(Object.entries(obj).map(([e, id]) => [id, e]));
 
 const mapRecordsToAppUserEvents = async (filePath: string) => {
     const records = parse<RawEvent>(await Bun.file(filePath).text(), {

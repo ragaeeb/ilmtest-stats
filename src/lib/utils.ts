@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 export const cn = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(' ');
 
 // --- Add near the other helpers ---
@@ -6,12 +8,18 @@ const DATE_FMT: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', 
 const DATE_TZ: 'UTC' | undefined = 'UTC';
 
 export const toDate = (v: unknown): Date | null => {
-    if (v instanceof Date) return Number.isNaN(+v) ? null : v;
-    if (typeof v !== 'string') return null;
+    if (v instanceof Date) {
+        return Number.isNaN(+v) ? null : v;
+    }
+    if (typeof v !== 'string') {
+        return null;
+    }
 
     // Handles "YYYY-MM-DD", ISO with Z, etc.
     const d = new Date(v);
-    if (!Number.isNaN(+d)) return d;
+    if (!Number.isNaN(+d)) {
+        return d;
+    }
 
     // As a fallback, coerce plain dates to UTC midnight
     if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
@@ -23,7 +31,9 @@ export const toDate = (v: unknown): Date | null => {
 
 export const formatDate = (v: unknown, opts: Intl.DateTimeFormatOptions = DATE_FMT): string => {
     const d = toDate(v);
-    if (!d) return String(v ?? '');
+    if (!d) {
+        return String(v ?? '');
+    }
     return new Intl.DateTimeFormat(undefined, { ...opts, timeZone: DATE_TZ }).format(d);
 };
 
@@ -33,22 +43,35 @@ export const inferType = (values: unknown[]): 'string' | 'number' | 'date' => {
         dates = 0,
         total = 0;
     for (const val of values) {
-        if (val == null || val === '') continue;
+        if (val == null || val === '') {
+            continue;
+        }
         total++;
-        if (isNumeric(val)) numbers++;
-        else if (toDate(val)) dates++;
+        if (isNumeric(val)) {
+            numbers++;
+        } else if (toDate(val)) {
+            dates++;
+        }
     }
     const rNum = numbers / Math.max(total, 1);
     const rDate = dates / Math.max(total, 1);
 
-    if (rDate >= 0.3 && rDate >= rNum) return 'date'; // more lenient for dates
-    if (rNum >= 0.7) return 'number';
+    if (rDate >= 0.3 && rDate >= rNum) {
+        return 'date'; // more lenient for dates
+    }
+    if (rNum >= 0.7) {
+        return 'number';
+    }
     return 'string';
 };
 
 export const isNumeric = (v: unknown) => {
-    if (v == null) return false;
-    if (typeof v === 'number') return Number.isFinite(v);
+    if (v == null) {
+        return false;
+    }
+    if (typeof v === 'number') {
+        return Number.isFinite(v);
+    }
     if (typeof v === 'string') {
         const cleaned = v.trim().replace(/[,_\s]/g, '');
         return /^-?\d+(?:\.\d+)?$/.test(cleaned);
@@ -57,8 +80,12 @@ export const isNumeric = (v: unknown) => {
 };
 
 export const tryParseNumber = (v: unknown) => {
-    if (v == null) return null;
-    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (v == null) {
+        return null;
+    }
+    if (typeof v === 'number') {
+        return Number.isFinite(v) ? v : null;
+    }
     if (typeof v === 'string') {
         const cleaned = v.trim().replace(/[,_\s]/g, '');
         return /^-?\d+(?:\.\d+)?$/.test(cleaned) ? Number(cleaned) : null;
@@ -67,7 +94,17 @@ export const tryParseNumber = (v: unknown) => {
 };
 
 export const tryParseDate = (v: unknown): Date | null => {
-    if (typeof v !== 'string') return null;
+    if (typeof v !== 'string') {
+        return null;
+    }
     const d = new Date(v);
     return Number.isNaN(d.getTime()) ? null : d;
+};
+
+export const invertObject = (obj: Record<string, number>) => {
+    return Object.fromEntries(Object.entries(obj).map(([e, id]) => [id, e]));
+};
+
+export const getDataFolderFilePath = (...tokens: string[]) => {
+    return path.join(process.cwd(), 'public', 'data', ...tokens);
 };
