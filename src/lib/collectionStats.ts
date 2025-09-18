@@ -86,6 +86,14 @@ const loadStatsFromRecords = async (filePath: string) => {
     return collectionToStats;
 };
 
+/**
+ * Collapses verbose collection progress exports into compact change logs and optionally writes
+ * the result to disk.
+ *
+ * @param filePath - Path to the raw collection statistics CSV export.
+ * @param outputPath - Destination path for the JSON artifact (omit to skip writing).
+ * @returns The optimized stats structure keyed by collection id.
+ */
 export const condenseCollectionStats = async (filePath: string, outputPath = 'collection_stats.json') => {
     const collectionToStats = await loadStatsFromRecords(filePath);
     const optimizedStats: Record<string, CompactStats[]> = {};
@@ -111,6 +119,12 @@ export const condenseCollectionStats = async (filePath: string, outputPath = 'co
     return result;
 };
 
+/**
+ * Merges a fresh collection stats export into the existing dataset and writes a compressed
+ * Brotli artifact for the application to consume.
+ *
+ * @param filePath - Path to the latest collection stats CSV export.
+ */
 export const updateCollectionStats = async (filePath: string) => {
     const newStats: OptimizedStats = await condenseCollectionStats(filePath, '');
     const prevStats: OptimizedStats = await Bun.file(path.join('public', 'data', 'collection_stats.json')).json();
@@ -134,6 +148,11 @@ type QuranProgress = {
     verse_id: number;
 };
 
+/**
+ * Normalizes Quran progress data into a sorted CSV with simplified column names.
+ *
+ * @param filePath - Path to the raw Quran progress CSV export.
+ */
 export const optimizeQuranProgress = async (filePath: string) => {
     const buf = await fs.readFile(filePath);
 

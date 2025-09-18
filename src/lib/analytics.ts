@@ -3,6 +3,13 @@ import { compressJson, decompressJson, decompressJsonFile } from './compression'
 import { decrypt, encrypt, initSecrets } from './security';
 import type { Analytics, AnalyticsEvent, SessionData } from './types';
 
+/**
+ * Normalizes raw session analytics JSON into a compressed Brotli artifact while encrypting
+ * sensitive event payloads and collapsing timestamps.
+ *
+ * @param filePath - Path to the raw analytics JSON file containing {@link SessionData[]}.
+ * @returns A promise that resolves once the optimized artifact has been written to disk.
+ */
 export const optimizeAnalytics = async (filePath: string) => {
     const fileContent = await readFile(filePath, 'utf-8');
     const sessions: SessionData[] = JSON.parse(fileContent);
@@ -40,6 +47,13 @@ export const optimizeAnalytics = async (filePath: string) => {
     console.log('Saved');
 };
 
+/**
+ * Loads a compressed analytics artifact, optionally decrypting any redacted event payloads.
+ *
+ * @param filePath - The Brotli compressed analytics file to load.
+ * @param decryptionKey - Optional override for the encryption secret used to decrypt payloads.
+ * @returns Parsed analytics records ready for the dashboard.
+ */
 export const loadAnalytics = async (filePath: string, decryptionKey = process.env.ENCRYPTION_SECRET) => {
     const analytics: Analytics[] = await decompressJsonFile(filePath);
 

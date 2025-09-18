@@ -17,6 +17,13 @@ type Info = {
     Country: string;
 };
 
+/**
+ * Normalizes raw BlackBerry download CSV exports into compressed per-app datasets and
+ * mapping tables that the dashboard can load efficiently.
+ *
+ * @param filePaths - Paths to one or more download CSV exports to normalize.
+ * @returns The grouped normalized records and lookup mappings written to disk.
+ */
 export const normalizeDownloads = async (filePaths: string[]) => {
     // Pre-allocate maps for better memory efficiency
     const uniqueVersions = new Map<string, number>();
@@ -214,6 +221,12 @@ export const normalizeDownloads = async (filePaths: string[]) => {
 const VALID_APP_NAMES = ['quran10', 'sunnah10', 'salat10'] as const;
 export type ValidAppName = (typeof VALID_APP_NAMES)[number];
 
+/**
+ * Type guard that checks if a string corresponds to a supported BB10 app name.
+ *
+ * @param appName - The potential app name.
+ * @returns True when the app is one of the supported values.
+ */
 export const isValidAppName = (appName: string): appName is ValidAppName => {
     for (let i = 0; i < VALID_APP_NAMES.length; i++) {
         if (VALID_APP_NAMES[i] === appName) {
@@ -223,6 +236,11 @@ export const isValidAppName = (appName: string): appName is ValidAppName => {
     return false;
 };
 
+/**
+ * Loads all BB10 lookup tables (countries, devices, etc.) from the data directory.
+ *
+ * @returns Parsed reference data keyed by identifier.
+ */
 export const loadReferenceData = async (): Promise<BB10ReferenceData> => {
     const dataDir = path.join(process.cwd(), 'public', 'data', 'bb10');
 
@@ -245,6 +263,12 @@ export const loadReferenceData = async (): Promise<BB10ReferenceData> => {
     };
 };
 
+/**
+ * Loads a Brotli-compressed normalized download CSV for the given BB10 app.
+ *
+ * @param appName - The app to load data for.
+ * @returns Parsed normalized download records.
+ */
 export const loadCompressedCsv = async (appName: ValidAppName): Promise<RawBB10Record[]> => {
     const filePath = path.join(process.cwd(), 'public', 'data', 'bb10', `${appName}.csv.br`);
     const compressedBuffer = await readFile(filePath);
@@ -269,6 +293,15 @@ export const loadCompressedCsv = async (appName: ValidAppName): Promise<RawBB10R
     });
 };
 
+/**
+ * Converts normalized raw records and reference data back into the denormalized format used
+ * for analytics computations.
+ *
+ * @param rawRecords - Records loaded from {@link loadCompressedCsv}.
+ * @param referenceData - Lookup tables for resolving IDs to values.
+ * @param appName - App identifier used to set product/file names.
+ * @returns Denormalized records ready for statistical analysis.
+ */
 export const denormalizeRecords = (
     rawRecords: RawBB10Record[],
     referenceData: BB10ReferenceData,
@@ -351,6 +384,13 @@ const groupByDate = (records: RawBB10Record[]): Array<{ date: string; downloads:
     return result;
 };
 
+/**
+ * Aggregates normalized download records into summary statistics and leaderboard breakdowns.
+ *
+ * @param records - Download records for a BB10 app.
+ * @param referenceData - Lookup data providing human-readable labels.
+ * @returns Rich download analytics for rendering in the UI.
+ */
 export const calculateStats = (records: RawBB10Record[], referenceData: BB10ReferenceData): BB10Stats => {
     if (records.length === 0) {
         return {

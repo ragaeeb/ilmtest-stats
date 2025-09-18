@@ -64,6 +64,13 @@ export type AutoBlockStats = {
     keywords: ReportedKeyword[];
 };
 
+/**
+ * Normalizes auto-block CSV exports by encrypting user identifiers, canonicalizing keywords
+ * and addresses, and emitting compressed artifacts consumed by the dashboard.
+ *
+ * @param addressCsvFile - Path to the raw address CSV export.
+ * @param keywordsCsvFile - Path to the raw keyword CSV export.
+ */
 export const optimizeAddresses = async (addressCsvFile: string, keywordsCsvFile: string) => {
     initSecrets();
 
@@ -331,6 +338,12 @@ const buildTopReporters = (addresses: ReportedAddress[], keywords: ReportedKeywo
     return topReporters.slice(0, 10);
 };
 
+/**
+ * Loads the pre-computed auto-block analytics bundle and materializes summary/top lists
+ * alongside the raw entries for UI consumption.
+ *
+ * @returns Structured auto-block analytics including leaderboards and summaries.
+ */
 export const loadAutoBlockStats = async (): Promise<AutoBlockStats> => {
     const [addresses, keywords] = (await Promise.all([
         loadCompressedCsvFromDataFolder('autoblock', 'address.csv.br'),

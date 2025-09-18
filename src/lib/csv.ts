@@ -6,6 +6,13 @@ import { inferType, tryParseDate, tryParseNumber } from './utils';
 
 const CSV_RELATIVE_PATH = path.join(process.cwd(), 'public', 'data', 'stats.csv');
 
+/**
+ * Reads a CSV file and returns normalized rows alongside metadata describing inferred column
+ * types and counts.
+ *
+ * @param filePath - Optional override of the CSV path (defaults to the public data CSV).
+ * @returns The normalized dataset with metadata.
+ */
 export async function readCsvToJson(filePath: string = CSV_RELATIVE_PATH): Promise<StatsResponse> {
     const buf = await fs.readFile(filePath);
     const content = buf.toString('utf-8');
