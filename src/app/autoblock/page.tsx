@@ -1,74 +1,14 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-
-type AutoBlockSummary = {
-    totalReports: number;
-    totalReportedAddresses: number;
-    totalReportedKeywords: number;
-    uniqueUsers: number;
-    uniqueAddresses: number;
-    uniqueKeywords: number;
-    totalBlocksFromAddresses: number;
-    totalBlocksFromKeywords: number;
-    totalBlocks: number;
-    zeroBlockReports: number;
-};
-
-type AutoBlockTopAddress = {
-    address: string;
-    reports: number;
-    reporters: number;
-    blocks: number;
-    averageBlocksPerReport: number;
-};
-
-type AutoBlockTopKeyword = {
-    term: string;
-    reports: number;
-    reporters: number;
-    blocks: number;
-    averageBlocksPerReport: number;
-};
-
-type AutoBlockTopReporter = {
-    userId: string;
-    reportedAddresses: number;
-    reportedKeywords: number;
-    zeroBlockReports: number;
-    totalReports: number;
-    blocksFromAddresses: number;
-    blocksFromKeywords: number;
-    totalBlocks: number;
-};
-
-type ReportedAddress = {
-    userId: string;
-    address: string;
-    count: number;
-};
-
-type ReportedKeyword = {
-    userId: string;
-    term: string;
-    count: number;
-};
-
-type AutoBlockStats = {
-    summary: AutoBlockSummary;
-    topAddresses: AutoBlockTopAddress[];
-    topKeywords: AutoBlockTopKeyword[];
-    topReporters: AutoBlockTopReporter[];
-    addresses: ReportedAddress[];
-    keywords: ReportedKeyword[];
-};
+import type { AutoBlockStats } from '@/lib/autoBlock';
 
 const formatNumber = (value: number) => value.toLocaleString();
 const formatAverage = (value: number) =>
     value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const requestAutoBlockStats = async (): Promise<AutoBlockStats> => {
-    const response = await fetch('/api/auto_block');
+    const response = await fetch('/api/autoblock');
 
     if (!response.ok) {
         let message = 'Failed to fetch auto block stats';
@@ -205,7 +145,9 @@ export default function AutoBlockPage() {
     }, []);
 
     const summaryCards = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return [
             {
                 title: 'Total Reports',
@@ -237,7 +179,9 @@ export default function AutoBlockPage() {
     }, [data]);
 
     const topAddressRows = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return data.topAddresses.map((item) => ({
             key: item.address.toLowerCase(),
             address: <span className="font-medium">{item.address}</span>,
@@ -249,7 +193,9 @@ export default function AutoBlockPage() {
     }, [data]);
 
     const topKeywordRows = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return data.topKeywords.map((item) => ({
             key: item.term.toLowerCase(),
             term: <span className="break-words font-medium">{item.term}</span>,
@@ -261,10 +207,12 @@ export default function AutoBlockPage() {
     }, [data]);
 
     const topReporterRows = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return data.topReporters.map((item) => ({
-            key: item.userId,
-            user: <span className="break-all font-medium">{item.userId}</span>,
+            key: item.user_id,
+            user: <span className="break-all font-medium">{item.user_id}</span>,
             totalReports: formatNumber(item.totalReports),
             addressReports: formatNumber(item.reportedAddresses),
             keywordReports: formatNumber(item.reportedKeywords),
@@ -274,21 +222,25 @@ export default function AutoBlockPage() {
     }, [data]);
 
     const addressReportRows = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return data.addresses.slice(0, 25).map((item) => ({
-            key: `${item.userId}::${item.address}`,
+            key: `${item.user_id}::${item.address}`,
             address: <span className="font-medium">{item.address}</span>,
-            reporter: <span className="break-all text-[rgb(var(--muted-foreground))]">{item.userId}</span>,
+            reporter: <span className="break-all text-[rgb(var(--muted-foreground))]">{item.user_id}</span>,
             blocks: formatNumber(item.count),
         }));
     }, [data]);
 
     const keywordReportRows = useMemo(() => {
-        if (!data) return [];
+        if (!data) {
+            return [];
+        }
         return data.keywords.slice(0, 25).map((item, index) => ({
-            key: `${item.userId}::${item.term}::${index}`,
+            key: `${item.user_id}::${item.term}::${index}`,
             keyword: <span className="break-words font-medium">{item.term}</span>,
-            reporter: <span className="break-all text-[rgb(var(--muted-foreground))]">{item.userId}</span>,
+            reporter: <span className="break-all text-[rgb(var(--muted-foreground))]">{item.user_id}</span>,
             blocks: formatNumber(item.count),
         }));
     }, [data]);
@@ -316,7 +268,9 @@ export default function AutoBlockPage() {
         );
     }
 
-    if (!data) return null;
+    if (!data) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-[rgb(var(--background))] p-6">

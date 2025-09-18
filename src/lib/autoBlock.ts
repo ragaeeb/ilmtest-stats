@@ -1,56 +1,26 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { parse } from 'csv-parse/sync';
-import { decompressString } from './compression';
+import { compressJson, compressString, loadCompressedCsvFromDataFolder } from './compression';
+import { encrypt, initSecrets } from './security';
+import { invertObject } from './utils';
 
-const DATA_DIR = path.join(process.cwd(), 'public', 'data', 'auto_block');
-const ADDRESSES_FILE = 'reported_addresses.csv.br';
-const KEYWORDS_FILE = 'reported_keywords.csv.br';
-
-const parseCount = (value: string | number | null | undefined): number => {
-    if (typeof value === 'number') {
-        return Number.isFinite(value) ? value : 0;
-    }
-
-    if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (!trimmed) return 0;
-        const parsed = Number.parseInt(trimmed, 10);
-        return Number.isNaN(parsed) ? 0 : parsed;
-    }
-
-    return 0;
-};
-
-const normalizeUserId = (value: string | number): string => {
-    if (typeof value === 'number') {
-        return String(value);
-    }
-    return value.trim();
-};
-
-type RawReportedAddress = {
-    user_id: string;
-    address: string;
-    count: string;
-};
-
-type RawReportedKeyword = {
-    user_id: string;
-    term: string;
-    count: string;
-};
-
-export type ReportedAddress = {
-    userId: string;
-    address: string;
+type ReportedData = {
+    user_id: number;
     count: number;
 };
 
-export type ReportedKeyword = {
-    userId: string;
+export type ReportedAddress = ReportedData & {
+    address: string;
+};
+
+export type ReportedKeyword = ReportedData & {
     term: string;
-    count: number;
+};
+
+type CommonStats = {
+    reports: number;
+    reporters: number;
+    blocks: number;
+    averageBlocksPerReport: number;
 };
 
 export type AutoBlockSummary = {
@@ -66,24 +36,16 @@ export type AutoBlockSummary = {
     zeroBlockReports: number;
 };
 
-export type AutoBlockTopAddress = {
+export type AutoBlockTopAddress = CommonStats & {
     address: string;
-    reports: number;
-    reporters: number;
-    blocks: number;
-    averageBlocksPerReport: number;
 };
 
-export type AutoBlockTopKeyword = {
+export type AutoBlockTopKeyword = CommonStats & {
     term: string;
-    reports: number;
-    reporters: number;
-    blocks: number;
-    averageBlocksPerReport: number;
 };
 
 export type AutoBlockTopReporter = {
-    userId: string;
+    user_id: number;
     reportedAddresses: number;
     reportedKeywords: number;
     zeroBlockReports: number;
@@ -102,60 +64,63 @@ export type AutoBlockStats = {
     keywords: ReportedKeyword[];
 };
 
-const loadCompressedCsv = async <T>(fileName: string): Promise<T[]> => {
-    const filePath = path.join(DATA_DIR, fileName);
-    const compressedBuffer = await readFile(filePath);
-    const csvContent = decompressString(compressedBuffer);
+export const optimizeAddresses = async (addressCsvFile: string, keywordsCsvFile: string) => {
+    initSecrets();
 
-    return parse(csvContent, {
+    const addresses = parse<ReportedAddress>(await Bun.file(addressCsvFile).text(), {
         columns: true,
+        cast: true,
         skip_empty_lines: true,
         trim: true,
-    }) as T[];
-};
+    });
 
-export const loadReportedAddresses = async (): Promise<ReportedAddress[]> => {
-    const rawRows = await loadCompressedCsv<RawReportedAddress>(ADDRESSES_FILE);
-    const addresses: ReportedAddress[] = [];
+    const keywords = parse<ReportedKeyword>(await Bun.file(keywordsCsvFile).text(), {
+        columns: true,
+        cast: true,
+        skip_empty_lines: true,
+        trim: true,
+    });
 
-    for (const row of rawRows) {
-        if (!row) continue;
-        const userId = row.user_id?.trim();
-        const address = row.address?.trim();
-        if (!userId || userId === 'user_id' || !address) {
-            continue;
+    const emailToEncryptedEmail: Record<string, string> = {};
+    const emailToUserId: Record<string, number> = {};
+    let nextUserId = 0;
+
+    for (const k of [...addresses, ...keywords]) {
+        if (k.user_id.toString().includes('@')) {
+            // legacy userIds were just plain-text email addresses
+            if (emailToUserId[k.user_id]) {
+                k.user_id = emailToUserId[k.user_id];
+            } else {
+                emailToEncryptedEmail[k.user_id] = encrypt(k.user_id.toString());
+                emailToUserId[k.user_id] = ++nextUserId;
+                k.user_id = nextUserId;
+            }
         }
-
-        addresses.push({
-            userId: normalizeUserId(userId),
-            address,
-            count: parseCount(row.count),
-        });
     }
 
-    return addresses;
-};
+    let csvRows = ['user_id,address,count'];
 
-export const loadReportedKeywords = async (): Promise<ReportedKeyword[]> => {
-    const rawRows = await loadCompressedCsv<RawReportedKeyword>(KEYWORDS_FILE);
-    const keywords: ReportedKeyword[] = [];
-
-    for (const row of rawRows) {
-        if (!row) continue;
-        const userId = row.user_id?.trim();
-        const term = row.term?.trim();
-        if (!userId || userId === 'user_id' || !term) {
-            continue;
-        }
-
-        keywords.push({
-            userId: normalizeUserId(userId),
-            term,
-            count: parseCount(row.count),
-        });
+    for (const record of addresses) {
+        csvRows.push([record.user_id, record.address, record.count].join(','));
     }
 
-    return keywords;
+    await Bun.write(`address.csv.br`, compressString(csvRows.join('\n')));
+
+    csvRows = ['user_id,term,count'];
+
+    for (const record of keywords) {
+        csvRows.push([record.user_id, JSON.stringify(record.term), record.count].join(','));
+    }
+
+    await Bun.write(`keywords.json.br`, compressJson(keywords));
+
+    const userIdToEmail = invertObject(emailToUserId);
+
+    for (const [userId, email] of Object.entries(userIdToEmail)) {
+        userIdToEmail[userId] = emailToEncryptedEmail[email];
+    }
+
+    await Bun.write(`user_to_email.json`, JSON.stringify(userIdToEmail));
 };
 
 const buildSummary = (addresses: ReportedAddress[], keywords: ReportedKeyword[]): AutoBlockSummary => {
@@ -165,25 +130,29 @@ const buildSummary = (addresses: ReportedAddress[], keywords: ReportedKeyword[])
 
     for (const entry of addresses) {
         totalBlocksFromAddresses += entry.count;
-        if (entry.count === 0) zeroBlockReports++;
+        if (entry.count === 0) {
+            zeroBlockReports++;
+        }
     }
 
     for (const entry of keywords) {
         totalBlocksFromKeywords += entry.count;
-        if (entry.count === 0) zeroBlockReports++;
+        if (entry.count === 0) {
+            zeroBlockReports++;
+        }
     }
 
-    const uniqueUserIds = new Set<string>();
+    const uniqueUserIds = new Set<number>();
     const uniqueAddresses = new Set<string>();
     const uniqueKeywords = new Set<string>();
 
     for (const entry of addresses) {
-        uniqueUserIds.add(entry.userId);
+        uniqueUserIds.add(entry.user_id);
         uniqueAddresses.add(entry.address.toLowerCase());
     }
 
     for (const entry of keywords) {
-        uniqueUserIds.add(entry.userId);
+        uniqueUserIds.add(entry.user_id);
         uniqueKeywords.add(entry.term);
     }
 
@@ -205,21 +174,23 @@ const buildSummary = (addresses: ReportedAddress[], keywords: ReportedKeyword[])
     };
 };
 
+type AggregateBase = { reports: number; reporters: Set<number>; blocks: number };
+
 const buildTopAddresses = (addresses: ReportedAddress[]): AutoBlockTopAddress[] => {
-    const aggregates = new Map<string, { address: string; reports: number; reporters: Set<string>; blocks: number }>();
+    const aggregates = new Map<string, AggregateBase & { address: string }>();
 
     for (const entry of addresses) {
         const key = entry.address.toLowerCase();
         let aggregate = aggregates.get(key);
 
         if (!aggregate) {
-            aggregate = { address: entry.address, reports: 0, reporters: new Set<string>(), blocks: 0 };
+            aggregate = { address: entry.address, reports: 0, reporters: new Set<number>(), blocks: 0 };
             aggregates.set(key, aggregate);
         }
 
         aggregate.reports += 1;
         aggregate.blocks += entry.count;
-        aggregate.reporters.add(entry.userId);
+        aggregate.reporters.add(entry.user_id);
     }
 
     const topAddresses = Array.from(aggregates.values()).map((value) => ({
@@ -231,8 +202,12 @@ const buildTopAddresses = (addresses: ReportedAddress[]): AutoBlockTopAddress[] 
     }));
 
     topAddresses.sort((a, b) => {
-        if (b.blocks !== a.blocks) return b.blocks - a.blocks;
-        if (b.reports !== a.reports) return b.reports - a.reports;
+        if (b.blocks !== a.blocks) {
+            return b.blocks - a.blocks;
+        }
+        if (b.reports !== a.reports) {
+            return b.reports - a.reports;
+        }
         return a.address.localeCompare(b.address);
     });
 
@@ -240,20 +215,20 @@ const buildTopAddresses = (addresses: ReportedAddress[]): AutoBlockTopAddress[] 
 };
 
 const buildTopKeywords = (keywords: ReportedKeyword[]): AutoBlockTopKeyword[] => {
-    const aggregates = new Map<string, { term: string; reports: number; reporters: Set<string>; blocks: number }>();
+    const aggregates = new Map<string, AggregateBase & { term: string }>();
 
     for (const entry of keywords) {
         const key = entry.term.toLowerCase();
         let aggregate = aggregates.get(key);
 
         if (!aggregate) {
-            aggregate = { term: entry.term, reports: 0, reporters: new Set<string>(), blocks: 0 };
+            aggregate = { term: entry.term, reports: 0, reporters: new Set<number>(), blocks: 0 };
             aggregates.set(key, aggregate);
         }
 
         aggregate.reports += 1;
         aggregate.blocks += entry.count;
-        aggregate.reporters.add(entry.userId);
+        aggregate.reporters.add(entry.user_id);
     }
 
     const topKeywords = Array.from(aggregates.values()).map((value) => ({
@@ -265,8 +240,12 @@ const buildTopKeywords = (keywords: ReportedKeyword[]): AutoBlockTopKeyword[] =>
     }));
 
     topKeywords.sort((a, b) => {
-        if (b.blocks !== a.blocks) return b.blocks - a.blocks;
-        if (b.reports !== a.reports) return b.reports - a.reports;
+        if (b.blocks !== a.blocks) {
+            return b.blocks - a.blocks;
+        }
+        if (b.reports !== a.reports) {
+            return b.reports - a.reports;
+        }
         return a.term.localeCompare(b.term);
     });
 
@@ -275,9 +254,9 @@ const buildTopKeywords = (keywords: ReportedKeyword[]): AutoBlockTopKeyword[] =>
 
 const buildTopReporters = (addresses: ReportedAddress[], keywords: ReportedKeyword[]): AutoBlockTopReporter[] => {
     const aggregates = new Map<
-        string,
+        number,
         {
-            userId: string;
+            user_id: number;
             reportedAddresses: number;
             reportedKeywords: number;
             zeroBlockReports: number;
@@ -287,45 +266,49 @@ const buildTopReporters = (addresses: ReportedAddress[], keywords: ReportedKeywo
     >();
 
     for (const entry of addresses) {
-        let aggregate = aggregates.get(entry.userId);
+        let aggregate = aggregates.get(entry.user_id);
         if (!aggregate) {
             aggregate = {
-                userId: entry.userId,
+                user_id: entry.user_id,
                 reportedAddresses: 0,
                 reportedKeywords: 0,
                 zeroBlockReports: 0,
                 blocksFromAddresses: 0,
                 blocksFromKeywords: 0,
             };
-            aggregates.set(entry.userId, aggregate);
+            aggregates.set(entry.user_id, aggregate);
         }
 
         aggregate.reportedAddresses += 1;
         aggregate.blocksFromAddresses += entry.count;
-        if (entry.count === 0) aggregate.zeroBlockReports += 1;
+        if (entry.count === 0) {
+            aggregate.zeroBlockReports += 1;
+        }
     }
 
     for (const entry of keywords) {
-        let aggregate = aggregates.get(entry.userId);
+        let aggregate = aggregates.get(entry.user_id);
         if (!aggregate) {
             aggregate = {
-                userId: entry.userId,
+                user_id: entry.user_id,
                 reportedAddresses: 0,
                 reportedKeywords: 0,
                 zeroBlockReports: 0,
                 blocksFromAddresses: 0,
                 blocksFromKeywords: 0,
             };
-            aggregates.set(entry.userId, aggregate);
+            aggregates.set(entry.user_id, aggregate);
         }
 
         aggregate.reportedKeywords += 1;
         aggregate.blocksFromKeywords += entry.count;
-        if (entry.count === 0) aggregate.zeroBlockReports += 1;
+        if (entry.count === 0) {
+            aggregate.zeroBlockReports += 1;
+        }
     }
 
     const topReporters = Array.from(aggregates.values()).map((value) => ({
-        userId: value.userId,
+        user_id: value.user_id,
         reportedAddresses: value.reportedAddresses,
         reportedKeywords: value.reportedKeywords,
         zeroBlockReports: value.zeroBlockReports,
@@ -336,25 +319,46 @@ const buildTopReporters = (addresses: ReportedAddress[], keywords: ReportedKeywo
     }));
 
     topReporters.sort((a, b) => {
-        if (b.totalBlocks !== a.totalBlocks) return b.totalBlocks - a.totalBlocks;
-        if (b.totalReports !== a.totalReports) return b.totalReports - a.totalReports;
-        return a.userId.localeCompare(b.userId);
+        if (b.totalBlocks !== a.totalBlocks) {
+            return b.totalBlocks - a.totalBlocks;
+        }
+        if (b.totalReports !== a.totalReports) {
+            return b.totalReports - a.totalReports;
+        }
+        return b.user_id - a.user_id;
     });
 
     return topReporters.slice(0, 10);
 };
 
 export const loadAutoBlockStats = async (): Promise<AutoBlockStats> => {
-    const [addresses, keywords] = await Promise.all([loadReportedAddresses(), loadReportedKeywords()]);
+    const [addresses, keywords] = (await Promise.all([
+        loadCompressedCsvFromDataFolder('autoblock', 'address.csv.br'),
+        loadCompressedCsvFromDataFolder('autoblock', 'keywords.csv.br'),
+    ])) as [ReportedAddress[], ReportedKeyword[]];
+
+    for (const address of addresses) {
+        address.address = address.address.toString();
+    }
+
+    for (const keyword of keywords) {
+        keyword.term = keyword.term.toString();
+    }
 
     // Sort raw entries by count descending for convenience in the UI
     addresses.sort((a, b) => {
-        if (b.count !== a.count) return b.count - a.count;
+        if (b.count !== a.count) {
+            return b.count - a.count;
+        }
+
         return a.address.localeCompare(b.address);
     });
 
     keywords.sort((a, b) => {
-        if (b.count !== a.count) return b.count - a.count;
+        if (b.count !== a.count) {
+            return b.count - a.count;
+        }
+
         return a.term.localeCompare(b.term);
     });
 
