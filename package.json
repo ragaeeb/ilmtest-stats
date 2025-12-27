@@ -20,8 +20,9 @@
         "analytics"
     ],
     "engines": {
-        "bun": ">=1.2.22"
+        "bun": ">=1.3.5"
     },
+    "packageManager": "bun@1.3.5",
     "description": "Analytics dashboards and reports for several apps.",
     "repository": {
         "type": "git",
@@ -34,21 +35,21 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "csv-parse": "^6.1.0",
-        "next": "15.5.3",
-        "react": "19.1.1",
-        "react-dom": "19.1.1",
-        "recharts": "^3.2.1",
-        "tailwind-merge": "^3.3.1",
-        "zod": "^4.1.9"
+        "next": "16.1.1",
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "recharts": "^3.6.0",
+        "tailwind-merge": "^3.4.0",
+        "zod": "^4.2.1"
     },
     "devDependencies": {
-        "@biomejs/biome": "2.2.4",
-        "@tailwindcss/postcss": "^4.1.13",
-        "@types/bun": "^1.2.22",
-        "@types/node": "^24.5.2",
-        "@types/react": "^19.1.13",
-        "@types/react-dom": "^19.1.9",
-        "tailwindcss": "^4.1.13",
-        "typescript": "^5.9.2"
+        "@biomejs/biome": "2.3.10",
+        "@tailwindcss/postcss": "^4.1.18",
+        "@types/bun": "^1.3.5",
+        "@types/node": "^25.0.3",
+        "@types/react": "^19.2.7",
+        "@types/react-dom": "^19.2.3",
+        "tailwindcss": "^4.1.18",
+        "typescript": "^5.9.3"
     }
 }
