@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/ragaeeb/ilmtest-stats/compare/v1.5.0...v1.5.1) (2025-12-27)
+
+
+### Bug Fixes
+
+* **security:** Upgrade dependencies ([8499ec7](https://github.com/ragaeeb/ilmtest-stats/commit/8499ec7bc7ac94e6d5f6ae3ff7307bbd6c88e0cb))
+
 # [1.5.0](https://github.com/ragaeeb/ilmtest-stats/compare/v1.4.1...v1.5.0) (2025-09-18)
 
 
